@@ -80,7 +80,7 @@ function normalizedEmit(requests) {
       console.log('Emitting Service Request #%s at %s', request.service_request_id, (new Date).toISOString());
       
       // broadcast globally
-      io.sockets.emit("request", request);
+      io.sockets.emit("new-request", request);
     
       // // broadcast to an individual ward channel
       // if ( (typeof request['extended_attributes'] !== 'undefined') && 
@@ -114,7 +114,7 @@ io.configure(function () {
 });
 
 io.sockets.on('connection', function (socket) {
-  socket.emit('requests', cachedRequests); // send all of our requests on the first connection
+  socket.emit('existing-requests', cachedRequests); // send all of our requests on the first connection
 });
 
 app.listen(PORT, function(){
