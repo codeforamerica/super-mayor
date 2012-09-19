@@ -54,15 +54,22 @@ function(app, _, io, Request) {
       
       socket.on('request', function (data) {
         // check if there is an existing request; if so remove it
-        var existingRequest = collection.get(data['service_request_id']);
+        var existingRequest = self.requests.get(data['service_request_id']);
         if (existingRequest) {
-          collection.remove(existingRequest, {silent: true})
+          self.requests.remove(existingRequest, {silent: true})
           console.log('Updated Service Request #%s', data['service_request_id']);
-          data.sound = 'update';
         }
         else {
           console.log('Added Service Request #%s', data['service_request_id']);
-          data.sound = 'add';
+        }
+        
+        var lastSummary = data['notes'][data['notes'].length - 1].summary;
+        
+        if (lastSummary.toLowerCase() === 'request opened') {
+          data.sound = 'open';
+        }
+        else {
+          data.sound = 'update';
         }
         
         self.requests.add(data);
