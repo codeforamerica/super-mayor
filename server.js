@@ -58,23 +58,7 @@ new cron.CronJob('0 */' + REFRESHMIN + ' * * * *', function(){
         .value();                         // and complete the chain
       
       // emit the requests
-      io.sockets.emit("new-requests", requests);
-      
-      // // Add them to our big object of cached requests      
-      // // if it already exists, remove it
-      // cachedRequests = __.reject(cachedRequests, function(cachedRequest) {
-      //   if (cachedRequest['service_request_id'] === request['service_request_id']) {
-      //     return true;
-      //   }
-      //   return false;
-      // });
-      // cachedRequests.unshift(request);
-      // 
-      // // ensure that we don't cache too many requests
-      // if (cachedRequests.length >= MAXCACHE ) {
-      //   cachedRequests.pop();
-      // }
-      
+      normalizedEmit(requests);
     });
     
     // Update when we last updated
@@ -84,6 +68,45 @@ new cron.CronJob('0 */' + REFRESHMIN + ' * * * *', function(){
   true // Start the job right now
 );
 
+/**
+ * Take a collection of requests and emit them over a period of time
+ *
+ */
+function normalizedEmit(requests) {
+  __.each(requests, function(request, index) {
+    console.log('Expect cron to fire at', new Date(request['updated_datetime'].getTime() + (REFRESHMIN * 60000)));
+    setTimeout(function() {
+      // log it
+      console.log('Emitting Service Request #%s at %s', request.service_request_id, (new Date).toISOString());
+      
+      // broadcast globally
+      io.sockets.emit("request", request);
+    
+      // // broadcast to an individual ward channel
+      // if ( (typeof request['extended_attributes'] !== 'undefined') && 
+      //      (typeof request['extended_attributes'].ward !== 'undefined')
+      //    ) {
+      //   io.sockets.in("ward-" + request['extended_attributes'].ward).emit("request", request);
+      // }
+      
+      // Add them to our big object of cached requests      
+      // if it already exists, remove it
+      cachedRequests = __.reject(cachedRequests, function(cachedRequest) {
+        if (cachedRequest['service_request_id'] === request['service_request_id']) {
+          return true;
+        }
+        return false;
+      });
+      cachedRequests.unshift(request);
+      
+      // ensure that we don't cache too many requests
+      if (cachedRequests.length >= MAXCACHE ) {
+        cachedRequests.pop();
+      }
+    }, (request['updated_datetime'].getTime() + (REFRESHMIN * 60000)) - (new Date).getTime() );
+  });
+}
+
 // assuming io is the Socket.IO server object
 io.configure(function () { 
   io.set("transports", ["xhr-polling"]); 
@@ -91,7 +114,7 @@ io.configure(function () {
 });
 
 io.sockets.on('connection', function (socket) {
-  socket.emit('existing-requests', cachedRequests); // send all of our requests on the first connection
+  socket.emit('requests', cachedRequests); // send all of our requests on the first connection
 });
 
 app.listen(PORT, function(){
