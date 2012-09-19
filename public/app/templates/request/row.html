@@ -1,0 +1,12 @@
+<td>
+    <a href="http://servicetracker.cityofchicago.org/requests/<%= request['service_request_id'] %>">
+      #<%= request['service_request_id'] %>
+    </a>
+  </td>
+  <td><%= request['updated_datetime'] %>
+  </td>
+  <td><%= request['service_name'] %></td>
+  <td>Ward <%= request['extended_attributes'].ward %></td>
+  <td><%= request['address'] %></td>
+  <td><%= request['status'] %></td>
+  <td><%= request['notes'][request['notes'].length - 1].summary %></td>

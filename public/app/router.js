@@ -39,41 +39,11 @@ function(app, _, io, Request) {
     initialize: function() {
       var self = this;
       app.useLayout("main");
-      this.requests = new Request.Collection();
+      
+      self.requests;
       
       var socket = io.connect('/');
-      socket.on('requests', function (data) {
-        console.log('Loaded %d Service Requests', data.length)
-        // be sure to treat them as if the sound has been played
-        _.each(data, function(request) {
-          request.sound = false;
-        });
-                
-        self.requests.add(data);
-      });
-      
-      socket.on('request', function (data) {
-        // check if there is an existing request; if so remove it
-        var existingRequest = self.requests.get(data['service_request_id']);
-        if (existingRequest) {
-          self.requests.remove(existingRequest, {silent: true})
-          console.log('Updated Service Request #%s', data['service_request_id']);
-        }
-        else {
-          console.log('Added Service Request #%s', data['service_request_id']);
-        }
-        
-        var lastSummary = data['notes'][data['notes'].length - 1].summary;
-        
-        if (lastSummary.toLowerCase() === 'request opened') {
-          data.sound = 'open';
-        }
-        else {
-          data.sound = 'update';
-        }
-        
-        self.requests.add(data);
-      });
+      this.requests = new Request.Collection(null, {socket: socket});
             
       app.layout.setViews({
         "#navbar": new Backbone.View({
