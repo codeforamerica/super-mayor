@@ -1,4 +1,5 @@
 var __              = require('lodash'),
+    async           = require('async'),
     express         = require('express'),
     app             = module.exports = express.createServer(),
     io              = require('socket.io').listen(app),
@@ -9,7 +10,8 @@ var __              = require('lodash'),
     REFRESHMIN      = 2, // refresh things every how many minutes
     LASTUPDATED     = new Date(), // when this was last updated
     cachedRequests  = [], // a holder for all our requests
-    MAXCACHE        = 1000; // maximum number of requests to cache
+    MAXCACHE        = 1000,// maximum number of requests to cache
+    prevEmit        = new Date(0); // the last time we emitted something
     
 
 /** Express Configuration **/
@@ -37,6 +39,8 @@ app.configure('production', function(){
 // CRON FUNCTION
 //
 new cron.CronJob('0 */' + REFRESHMIN + ' * * * *', function(){
+// new cron.CronJob('*/5 * * * * *', function(){
+  
     // runs every minute
     chicago.serviceRequests({
       "updated_after": LASTUPDATED.toISOString(),
@@ -73,8 +77,20 @@ new cron.CronJob('0 */' + REFRESHMIN + ' * * * *', function(){
  *
  */
 function normalizedEmit(requests) {
-  __.each(requests, function(request, index) {
-    console.log('Expect cron to fire at', new Date(request['updated_datetime'].getTime() + (REFRESHMIN * 60000)));
+  var MINDELAY = 1000; // minimum time between emits
+  
+  async.forEachSeries(requests, function(request, done) {
+    var expectedEmit = new Date(request['updated_datetime'].getTime() + (REFRESHMIN * 60000));
+    
+    // check if expectedEmit falls before our Minimum Delay; if so, set it to our minimum delay
+    if (expectedEmit.getTime() < prevEmit.getTime() + MINDELAY) {
+      expectedEmit = new Date(prevEmit.getTime() + MINDELAY)
+    }
+    
+    // save the emit time for our next loop
+    prevEmit = expectedEmit;
+    console.log('Expect to emit at', expectedEmit);
+    
     setTimeout(function() {
       // log it
       console.log('Emitting Service Request #%s at %s', request.service_request_id, (new Date).toISOString());
@@ -103,7 +119,9 @@ function normalizedEmit(requests) {
       if (cachedRequests.length >= MAXCACHE ) {
         cachedRequests.pop();
       }
-    }, (request['updated_datetime'].getTime() + (REFRESHMIN * 60000)) - (new Date).getTime() );
+    }, expectedEmit.getTime() - (new Date).getTime() );
+   
+   done(); 
   });
 }
 
