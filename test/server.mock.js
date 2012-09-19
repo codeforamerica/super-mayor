@@ -47,8 +47,8 @@ var generateRequests = function (options, callback) {
   var requests = [];
   var date = new Date((new Date()).getTime() - (2 * 60 * 1000));
   // every 5 seconds
-  for (var i=0; i < 2; i++) {
-    date = new Date( date.getTime() + 5000 );
+  for (var i=0; i < 48; i++) {
+    date = new Date( date.getTime() + 100);
     requests.push(createRequest(date, i%2));
     console.log("Mocking Request: ", date);
     
