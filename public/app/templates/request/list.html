@@ -1,14 +1,23 @@
-<div id="scene" style="background-position: <%= sceneForegroundX %>px 100%">
+<%
+  var currentHour = (new Date()).getHours() + ( (new Date()).getTimezoneOffset()/60 );
+  currentHour = currentHour%24;
+  if ( (currentHour > 17) || (currentHour < 8) ) {
+    sceneClass = "night";
+  } else {
+    sceneClass = "";
+  }
+%>
+
+<div id="scene" class="<%= sceneClass %>" style="background-position: <%= sceneForegroundX %>px 100%">
   <div id="mayor"></div>
 </div>
 <table class="table table-bordered table-striped tablesorter">
   <thead>
     <tr>
       <th>ID#</th>
-      <th>updated_datetime</th>
+      <th class="hidden-phone">Updated</th>
       <th>Type</th>
-      <th>Ward</th>
-      <th>Address</th>
+      <th>Location</th>
       <th>Status</th>
       <th>Last Note</th>
     </tr>

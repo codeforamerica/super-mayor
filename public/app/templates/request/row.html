@@ -3,10 +3,8 @@
       #<%= request['service_request_id'] %>
     </a>
   </td>
-  <td><%= request['updated_datetime'] %>
-  </td>
+  <td class="hidden-phone"><%= request['updated_datetime'] %></td>
   <td><%= request['service_name'] %></td>
-  <td>Ward <%= request['extended_attributes'].ward %></td>
-  <td><%= request['address'] %></td>
+  <td>Ward <%= request['extended_attributes'].ward %><span class="hidden-phone">: <%= request['address'] %></span></td>
   <td><%= request['status'] %></td>
   <td><%= request['notes'][request['notes'].length - 1].summary %></td>

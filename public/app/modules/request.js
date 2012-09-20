@@ -229,6 +229,7 @@ function(app, Backbone, _) {
     moveSceneForeground: function() {
       var self = this;
       setInterval(function() {
+        // scroll the background
         var SPEED = -1;
         var WIDTH = 960;
         var posX = self.sceneForegroundX;
@@ -238,6 +239,15 @@ function(app, Backbone, _) {
         }
         self.sceneForeGroundX = (posX + SPEED) % WIDTH;
         $('#scene').css('background-position', self.sceneForeGroundX + 'px 100%' );
+        
+        // change the background to be night/day
+        var currentHour = (new Date()).getHours() + ( (new Date()).getTimezoneOffset()/60 );
+        currentHour = currentHour%24;
+        if ( (currentHour > 17) || (currentHour < 8) ) {
+          $('#scene').addClass('night');
+        } else {
+          $('#scene').removeClass('night');
+        }
       }, 75);
     },
     

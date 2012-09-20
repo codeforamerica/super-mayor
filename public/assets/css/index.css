@@ -1,4 +1,6 @@
 @import "../vendor/bootstrap/css/bootstrap.css";
+/** Boostrap-Responsive always at bottom **/
+@import "../vendor/bootstrap/css/bootstrap-responsive.css";
 
 audio {
   display: none;
@@ -13,6 +15,15 @@ audio {
   position: relative;
   z-index: -1000;
   overflow: hidden;
+  border: 1px solid #DDD;
+  border-radius: 4px;
+  background-color: #BFE9FF;
+  border-bottom: 8px solid black;
+  transition: background-color 20s;
+}
+
+#scene.night {
+  background-color: #0D0086;
 }
 
 #scene #mayor {
@@ -48,6 +59,7 @@ audio {
   bottom: 176px;
   border-radius: 10px;
 }
+
 #scene .beast.update:after {
   position: absolute;
   content: "!";
@@ -62,5 +74,4 @@ audio {
 }
 
 
-/** Boostrap-Responsive always at bottom **/
-@import "../vendor/bootstrap/css/bootstrap-responsive.css";
+
