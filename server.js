@@ -77,7 +77,7 @@ new cron.CronJob('0 */' + REFRESHMIN + ' * * * *', function(){
  *
  */
 function normalizedEmit(requests) {
-  var MINDELAY = 1000; // minimum time between emits
+  var MINDELAY = 1300; // minimum time between emits
   
   async.forEachSeries(requests, function(request, done) {
     var expectedEmit = new Date(request['updated_datetime'].getTime() + (REFRESHMIN * 60000));

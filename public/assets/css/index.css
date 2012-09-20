@@ -2,8 +2,10 @@
 /** Boostrap-Responsive always at bottom **/
 @import "../vendor/bootstrap/css/bootstrap-responsive.css";
 
-audio {
+audio,
+.audio {
   display: none;
+  height: 0;
 }
 
 #scene {

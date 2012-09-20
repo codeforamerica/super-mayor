@@ -124,7 +124,7 @@ function(app, Backbone, _) {
             
             // and add a jump sound
             self.$el.find('.beast').append(
-              '<audio src="/assets/audio/jump.mp3" autoplay controls></audio>'
+              '<audio src="/assets/audio/jump.mp3" autoplay></audio>'
             );
           }
           // play the sound
@@ -132,7 +132,7 @@ function(app, Backbone, _) {
             console.log('COIN!');
             
             self.$el.find('.beast').append(
-              '<audio src="/assets/audio/coin.mp3" autoplay controls></audio>'
+              '<audio src="/assets/audio/coin.mp3" autoplay></audio>'
             );
           }
           
