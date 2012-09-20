@@ -47,9 +47,10 @@ new cron.CronJob('0 */' + REFRESHMIN + ' * * * *', function(){
       "extensions": "true"
     }, function(err, data) {
       if (err) { console.log('Error retrieving request:', err); return; }
-      if (data.length === 0) { return; }
       
-      console.log("Retrieved %d service requests at %s", data.length, LASTUPDATED.toISOString())
+      console.log("Retrieved %d service requests at %s", data.length, LASTUPDATED.toISOString());
+      
+      if (data.length === 0) { return; }
 
       var requests = __.chain(data)       // Underscore chaining!
         .reject(function(request) {       // Remove any requests that don't have service_request_id's
