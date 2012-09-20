@@ -4,9 +4,11 @@ var server = require('../server');
 var Open311 = require('open311');
 var fs = require('fs');
 
+var SRID = 0
+
 var createRequest = function (updatedDatetime, updated) {
   var request =  {
-    service_request_id: "12-" + Math.floor((Math.random()*999999999)+1),
+    service_request_id: "12-" + SRID++,
     status: "open",
     service_name: "Building Violation",
     service_code: "4fd3bd72e750846c530000cd",
@@ -31,7 +33,7 @@ var createRequest = function (updatedDatetime, updated) {
     }
   };
   
-  if (updated) {
+  if (updated === 0) {
     request.notes.push({
       datetime: "2012-09-19T09:46:42-05:00",
       summary: "Request updated",
@@ -47,9 +49,9 @@ var generateRequests = function (options, callback) {
   var requests = [];
   var date = new Date((new Date()).getTime() - (2 * 60 * 1000));
   // every 5 seconds
-  for (var i=0; i < 48; i++) {
-    date = new Date( date.getTime() + 100);
-    requests.push(createRequest(date, i%2));
+  for (var i=0; i < 24; i++) {
+    date = new Date( date.getTime() + 5000);
+    requests.push(createRequest(new Date(date.getTime() + Math.floor((Math.random()*5000)+1)), i%6));
     console.log("Mocking Request: ", date);
     
   }

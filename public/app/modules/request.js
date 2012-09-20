@@ -28,14 +28,8 @@ function(app, Backbone, _) {
 
     model: Request.Model,
     
-    comparator: function(a, b) {
-      if ( a.get('updated_datetime') < b.get('updated_datetime') ) {
-        return 1;
-      }
-      else if (a.get('updated_datetime') > b.get('updated_datetime')) {
-        return -1;
-      };
-      return 0;
+    comparator: function(a) {
+      return -(new Date(a.get('updated_datetime')).getTime());
     },
     
     initialize: function(models, options) {
@@ -44,12 +38,13 @@ function(app, Backbone, _) {
       
       this.socket.on('existing-requests', function (data) {
         console.log('Loaded %d Service Requests', data.length)
-        // be sure to treat them as if the sound has been played
-        _.each(data, function(request) {
-          request.sound = false;
-        });
+        
+        for(var i; i < data.length; i++) {
+          data[i].sound = false;
+        }
 
         self.add(data);
+        self.trigger('reset');
       });
       
       this.socket.on('new-request', function (data) {

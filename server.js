@@ -10,7 +10,7 @@ var __              = require('lodash'),
     REFRESHMIN      = 2, // refresh things every how many minutes
     LASTUPDATED     = new Date(), // when this was last updated
     cachedRequests  = [], // a holder for all our requests
-    MAXCACHE        = 1000,// maximum number of requests to cache
+    MAXCACHE        = 100,// maximum number of requests to cache
     prevEmit        = new Date(0); // the last time we emitted something
     
 
