@@ -10,22 +10,41 @@ audio,
 
 #scene {
   height: 236px;
-  background-image: url(../img/skyline.png);
-  background-position: 0px 0px;
-  background-repeat: repeat-x;
   margin-bottom: 20px;
   position: relative;
   z-index: -1000;
   overflow: hidden;
   border: 1px solid #DDD;
   border-radius: 4px;
-  background-color: #BFE9FF;
   border-bottom: 8px solid black;
   transition: background-color 20s;
 }
 
-#scene.night {
+#scene #background {
+  height: 100%;
+  width: 100%;
+  background-color: #BFE9FF#;
+  position: absolute;
+  z-index: -900;
+  background-image: url(../img/daysky.png);
+}
+
+#scene.night #background {
   background-color: #0D0086;
+  background-image: url(../img/nightsky.png);
+}
+
+#scene #foreground {
+  background-image: url(../img/skyline.png);
+  background-position: 0px 0px;
+  background-repeat: repeat-x;
+  height: 100%;
+  width: 100%;
+  background-color: transparent;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -800;
 }
 
 #scene #mayor {

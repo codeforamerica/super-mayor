@@ -96,74 +96,78 @@ function(app, Backbone, _) {
   //
   Request.Views.Beast = Backbone.View.extend({
     template: "request/beast",
+    
+    tagName: 'div',
+    
+    className: 'beast',
 
     serialize: function() {
       return { request: this.model.attributes };
+    },
+    
+    move: function() {
+      var self = this;
+      var WIDTH = 960;
+      var oldPosx = self.$el.css('right').match(/(-?[0-9]*)px/)[1];
+      var posX = Number(oldPosx) + 4;
+      // set the position
+      self.$el.css('right', posX + 'px' );
+        
+      if (self.$el.position().left < ($('#mayor').position().left + $('#mayor').width())
+          && self.$el.position().left > ($('#mayor').position().left)
+          && ( self.model.get('sound') !== false )
+        ) {
+            
+        // make the mayor jump
+        if (!$('#mayor').hasClass('jump')) {   
+          $('#mayor').addClass('jump');
+          console.log('JUMP!');
+            
+          // and add a jump sound
+          self.$el.append(
+            '<audio src="/assets/audio/jump.mp3" autoplay></audio>'
+          );
+        }
+        // play the sound
+        if (self.model.get('sound') === 'update') {
+          console.log('COIN!');
+            
+          self.$el.append(
+            '<audio src="/assets/audio/coin.mp3" autoplay></audio>'
+          );
+        }
+          
+        // remove the sound from the model
+        self.model.set('sound', false);
+          
+        // add it to our Table too
+        self.parent.insertView("tbody", new Request.Views.Row({
+          model: self.model,
+          append: function(root, child) {
+            $(root).prepend(child);
+          },
+        })).render();
+          
+      }
+      // only land the mayor if he's passed the beast && he's within 1.5 widths of the beast
+      // to prevent passed beasts grounding the mayor
+      else if ( (self.$el.position().left + self.$el.width()) < ($('#mayor').position().left)
+          && (self.$el.position().left + (1.1 * self.$el.width())) > ($('#mayor').position().left)
+          && $('#mayor').hasClass('jump')
+        ) {      
+        $('#mayor').removeClass('jump');
+        console.log('LAND!');
+      }
+        
+      if (posX > $('#foreground').width()) {
+        self.remove();
+      } 
     },
 
     initialize: function(options) {
       this.parent = options.parent;
       var self = this;      
-            
-      var interval = setInterval(function() {
-        var WIDTH = 960;
-        var oldPosx = self.$el.find('.beast').css('right').match(/(-?[0-9]*)px/)[1];
-        var posX = Number(oldPosx) + 1;
-        // set the position
-        self.$el.find('.beast').css('right', posX + 'px' );
-        
-        if (self.$el.find('.beast').position().left < ($('#mayor').position().left + $('#mayor').width())
-            && self.$el.find('.beast').position().left > ($('#mayor').position().left)
-            && ( self.model.get('sound') !== false )
-          ) {
-            
-          // make the mayor jump
-          if (!$('#mayor').hasClass('jump')) {   
-            $('#mayor').addClass('jump');
-            console.log('JUMP!');
-            
-            // and add a jump sound
-            self.$el.find('.beast').append(
-              '<audio src="/assets/audio/jump.mp3" autoplay></audio>'
-            );
-          }
-          // play the sound
-          if (self.model.get('sound') === 'update') {
-            console.log('COIN!');
-            
-            self.$el.find('.beast').append(
-              '<audio src="/assets/audio/coin.mp3" autoplay></audio>'
-            );
-          }
-          
-          // remove the sound from the model
-          self.model.set('sound', false);
-          
-          // add it to our Table too
-          self.parent.insertView("tbody", new Request.Views.Row({
-            model: self.model,
-            append: function(root, child) {
-              $(root).prepend(child);
-            },
-          })).render();
-          
-        }
-        // only land the mayor if he's passed the beast && he's within 1.5 widths of the beast
-        // to prevent passed beasts grounding the mayor
-        else if ( (self.$el.find('.beast').position().left + self.$el.find('.beast').width()) < ($('#mayor').position().left)
-            && (self.$el.find('.beast').position().left + (1.1 * self.$el.find('.beast').width())) > ($('#mayor').position().left)
-            && $('#mayor').hasClass('jump')
-          ) {      
-          $('#mayor').removeClass('jump');
-          console.log('LAND!');
-        }
-        
-        
-        if (posX > $('#scene').width()) {
-          clearInterval(interval);
-          self.remove();
-        }       
-      }, 10);
+      this.parent.on('loop', this.move, this);       
     },
   });
   
@@ -177,6 +181,7 @@ function(app, Backbone, _) {
       return { 
         collection: this.collection,
         sceneForegroundX: this.sceneForegroundX,
+        daytime: this.daytime
       };
     },
     
@@ -214,48 +219,81 @@ function(app, Backbone, _) {
         timeout = 0;
       }      
       // add it to our row
-      setTimeout(function() {
-        
+      setTimeout(function() {        
         self.insertView("#scene", new Request.Views.Beast({
           model: model,
           parent: self,
         })).render();
-
       }, timeout);
     },
     
-    sceneForegroundX: 0,
+    daytime: true,
+    foregroundX: 0,
+    backgroundX: 0,
     
-    moveSceneForeground: function() {
-      var self = this;
-      setInterval(function() {
+    moveForeground: function() {
+        // scroll the foreground
+        var SPEED = -2;
+        var WIDTH = 960;
+        var posX = this.foregroundX;
+        var foregroundPos= $('#foreground').css('background-position');
+        if (foregroundPos) {
+          posX = Number( foregroundPos.match(/(-?[0-9]*)px 100%/)[1] );
+        }
+        this.foregroundX = (posX + SPEED) % WIDTH;
+        $('#foreground').css('background-position', this.foregroundX + 'px 100%' );
+    },
+    
+    moveBackground: function() {
         // scroll the background
         var SPEED = -1;
         var WIDTH = 960;
-        var posX = self.sceneForegroundX;
-        var backgroundPosition = $('#scene').css('background-position');
-        if (backgroundPosition) {
-          posX = Number( backgroundPosition.match(/(-?[0-9]*)px 100%/)[1] );
+        var posX = this.backgroundX;
+        var backgroundPos= $('#background').css('background-position');
+        if (backgroundPos) {
+          posX = Number( backgroundPos.match(/(-?[0-9]*)px 100%/)[1] );
         }
-        self.sceneForeGroundX = (posX + SPEED) % WIDTH;
-        $('#scene').css('background-position', self.sceneForeGroundX + 'px 100%' );
-        
-        // change the background to be night/day
-        var currentHour = (new Date()).getHours() + ( (new Date()).getTimezoneOffset()/60 );
-        currentHour = currentHour%24;
-        if ( (currentHour > 17) || (currentHour < 8) ) {
-          $('#scene').addClass('night');
-        } else {
-          $('#scene').removeClass('night');
-        }
-      }, 75);
+        this.backgroundX = (posX + SPEED) % WIDTH;
+        $('#background').css('background-position', this.backgroundX + 'px 100%' );
+    },
+
+    
+    dayNightCycle: function() {
+      // change the background to be night/day
+      var currentHour = (new Date()).getHours() + ( (new Date()).getTimezoneOffset()/60 );
+      currentHour = currentHour%24;
+      if ( (currentHour > 17) || (currentHour < 8) ) {
+        $('#scene').addClass('night');
+        this.daytime = false;
+      } else {
+        $('#scene').removeClass('night');
+        this.daytime = true;
+      }
+    },
+    
+    eventLoop: function() {
+      var EVENTRATE = 50;
+      var self = this;
+      
+      setInterval(function() {
+        self.trigger('loop');
+      }, EVENTRATE);
     },
     
     initialize: function() {
       this.collection.on('reset', this.render, this);
       this.collection.on('add', this.addRequest, this);
       
-      this.moveSceneForeground();
+      this.daytime = this.dayNightCycle();
+      
+      this.on('loop', this.moveForeground, this);
+      this.on('loop', this.moveBackground, this);
+      this.on('loop', this.dayNightCycle, this);
+      
+      
+      this.eventLoop();
+      
+      
       this.collection.on('reset', function() {console.log("Reset!")})
     },
   });

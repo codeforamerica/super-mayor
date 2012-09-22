@@ -8,7 +8,9 @@
   }
 %>
 
-<div id="scene" class="<%= sceneClass %>" style="background-position: <%= sceneForegroundX %>px 100%">
+<div id="scene" class="<%= daytime ? 'day' : 'night' %>">
+  <div id="foreground" style="background-position: 0px 100%"></div>
+  <div id="background" style="background-position: 0px 100%"></div>
   <div id="mayor"></div>
 </div>
 <table class="table table-bordered table-striped tablesorter">

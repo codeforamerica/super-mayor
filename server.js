@@ -35,43 +35,49 @@ app.configure('production', function(){
 });
 
 
+// Get requests from the last hour on startup
+LASTUPDATED = new Date(LASTUPDATED.getTime() - 60*60*1000);
+getRequests(LASTUPDATED);
+
 //
 // CRON FUNCTION
 //
 new cron.CronJob('0 */' + REFRESHMIN + ' * * * *', function(){
-// new cron.CronJob('*/5 * * * * *', function(){
-  
-    // runs every minute
-    chicago.serviceRequests({
-      "updated_after": LASTUPDATED.toISOString(),
-      "extensions": "true"
-    }, function(err, data) {
-      if (err) { console.log('Error retrieving request:', err); return; }
-      
-      console.log("Retrieved %d service requests at %s", data.length, LASTUPDATED.toISOString());
-      
-      if (data.length === 0) { return; }
-
-      var requests = __.chain(data)       // Underscore chaining!
-        .reject(function(request) {       // Remove any requests that don't have service_request_id's
-          if (typeof request['service_request_id'] === 'undefined') {
-            return true;
-          }
-          return false;
-        })
-        .sortBy('updated_datetime')       // Sort by updated_datetime
-        .value();                         // and complete the chain
-      
-      // emit the requests
-      normalizedEmit(requests);
-    });
-    
-    // Update when we last updated
-    LASTUPDATED = new Date();
-  },
-  null, // no function to call when finished
+  getRequests(LASTUPDATED);
+}, null, // no function to call when finished
   true // Start the job right now
 );
+
+function getRequests(lastUpdated) {
+  // runs every minute
+  chicago.serviceRequests({
+    "updated_after": lastUpdated.toISOString(),
+    "extensions": "true"
+  }, function(err, data) {
+    if (err) { console.log('Error retrieving request:', err); return; }
+      
+    console.log("Retrieved %d service requests at %s", data.length, LASTUPDATED.toISOString());
+      
+    if (data.length === 0) { return; }
+
+    var requests = __.chain(data)       // Underscore chaining!
+      .reject(function(request) {       // Remove any requests that don't have service_request_id's
+        if (typeof request['service_request_id'] === 'undefined') {
+          return true;
+        }
+        return false;
+      })
+      .sortBy('updated_datetime')       // Sort by updated_datetime
+      .value();                         // and complete the chain
+      
+    // emit the requests
+    normalizedEmit(requests);
+  });
+    
+  // Update when we last updated
+  lastUpdated = new Date();
+}
+
 
 /**
  * Take a collection of requests and emit them over a period of time
