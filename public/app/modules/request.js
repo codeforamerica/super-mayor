@@ -52,7 +52,6 @@ function(app, Backbone, _) {
         // check if there is an existing request; if so remove it
         var existingRequest = self.get(request['service_request_id']);
         if (existingRequest) {
-          console.log(self);
           self.remove(existingRequest, {silent: true})
           console.log('Updated Service Request #%s', request['service_request_id']);
         }
@@ -241,29 +240,29 @@ function(app, Backbone, _) {
     backgroundX: 0,
     
     moveForeground: function() {
-        // scroll the foreground
-        var SPEED = -2;
-        var WIDTH = 960;
-        var posX = this.foregroundX;
-        var foregroundPos= $('#foreground').css('background-position');
-        if (foregroundPos) {
-          posX = Number( foregroundPos.match(/(-?[0-9]*)px 100%/)[1] );
-        }
-        this.foregroundX = (posX + SPEED) % WIDTH;
-        $('#foreground').css('background-position', this.foregroundX + 'px 100%' );
+      // scroll the foreground
+      var SPEED = -2;
+      var WIDTH = 960;
+      var posX = this.foregroundX;
+      var foregroundPos= $('#foreground').css('background-position');
+      if (foregroundPos) {
+        posX = Number( foregroundPos.match(/(-?[0-9]*)px 100%/)[1] );
+      }
+      this.foregroundX = (posX + SPEED) % WIDTH;
+      $('#foreground').css('background-position', this.foregroundX + 'px 100%' );
     },
     
     moveBackground: function() {
-        // scroll the background
-        var SPEED = -1;
-        var WIDTH = 236;
-        var posX = this.backgroundX;
-        var backgroundPos= $('#background').css('background-position');
-        if (backgroundPos) {
-          posX = Number( backgroundPos.match(/(-?[0-9]*)px 100%/)[1] );
-        }
-        this.backgroundX = (posX + SPEED) % WIDTH;
-        $('#background').css('background-position', this.backgroundX + 'px 100%' );
+      // scroll the background
+      var SPEED = -1;
+      var WIDTH = 315;
+      var posX = this.backgroundX;
+      var backgroundPos= $('#background').css('background-position');
+      if (backgroundPos) {
+        posX = Number( backgroundPos.match(/(-?[0-9]*)px 100%/)[1] );
+      }
+      this.backgroundX = (posX + SPEED) % WIDTH;
+      $('#background').css('background-position', this.backgroundX + 'px 100%' );
     },
 
     
