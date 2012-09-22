@@ -52,7 +52,8 @@ function(app, Backbone, _) {
         // check if there is an existing request; if so remove it
         var existingRequest = self.get(request['service_request_id']);
         if (existingRequest) {
-          self.requests.remove(existingRequest, {silent: true})
+          console.log(self);
+          self.remove(existingRequest, {silent: true})
           console.log('Updated Service Request #%s', request['service_request_id']);
         }
         else {
@@ -109,9 +110,19 @@ function(app, Backbone, _) {
       var self = this;
       var WIDTH = 960;
       var oldPosx = self.$el.css('right').match(/(-?[0-9]*)px/)[1];
-      var posX = Number(oldPosx) + 4;
+      var SPEED = 4;
+      if (self.model.get('sound') === 'update') {
+        SPEED = 3;
+      }
+      
+      var posX = Number(oldPosx) + SPEED;
       // set the position
       self.$el.css('right', posX + 'px' );
+      
+      // remove the element if it goes beyond the width of the scene
+      if (posX > $('#foreground').width()) {
+        self.remove();
+      } 
         
       if (self.$el.position().left < ($('#mayor').position().left + $('#mayor').width())
           && self.$el.position().left > ($('#mayor').position().left)
@@ -143,11 +154,11 @@ function(app, Backbone, _) {
         // add it to our Table too
         self.parent.insertView("tbody", new Request.Views.Row({
           model: self.model,
+          // in reverse order
           append: function(root, child) {
             $(root).prepend(child);
           },
-        })).render();
-          
+        })).render();    
       }
       // only land the mayor if he's passed the beast && he's within 1.5 widths of the beast
       // to prevent passed beasts grounding the mayor
@@ -158,15 +169,12 @@ function(app, Backbone, _) {
         $('#mayor').removeClass('jump');
         console.log('LAND!');
       }
-        
-      if (posX > $('#foreground').width()) {
-        self.remove();
-      } 
     },
 
     initialize: function(options) {
       this.parent = options.parent;
-      var self = this;      
+      var self = this;
+      this.className =  'best ' + this.model.get('sound');
       this.parent.on('loop', this.move, this);       
     },
   });
@@ -196,7 +204,7 @@ function(app, Backbone, _) {
     addRequest: function(model, collection, options) {
       
       // if no sound, just add it to the table
-      if( model.get('sound') === false ) {
+      if( model.get('sound') === false || typeof model.get('sound') === 'undefined') {
         this.insertView("tbody", new Request.Views.Row({
           model: model,
           append: function(root, child) {
@@ -223,6 +231,7 @@ function(app, Backbone, _) {
         self.insertView("#scene", new Request.Views.Beast({
           model: model,
           parent: self,
+          className: 'beast ' + model.get('sound'),
         })).render();
       }, timeout);
     },
@@ -247,7 +256,7 @@ function(app, Backbone, _) {
     moveBackground: function() {
         // scroll the background
         var SPEED = -1;
-        var WIDTH = 960;
+        var WIDTH = 236;
         var posX = this.backgroundX;
         var backgroundPos= $('#background').css('background-position');
         if (backgroundPos) {
@@ -289,10 +298,8 @@ function(app, Backbone, _) {
       this.on('loop', this.moveForeground, this);
       this.on('loop', this.moveBackground, this);
       this.on('loop', this.dayNightCycle, this);
-      
-      
-      this.eventLoop();
-      
+    
+      this.eventLoop();  
       
       this.collection.on('reset', function() {console.log("Reset!")})
     },

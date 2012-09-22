@@ -49,7 +49,6 @@ new cron.CronJob('0 */' + REFRESHMIN + ' * * * *', function(){
 );
 
 function getRequests(lastUpdated) {
-  // runs every minute
   chicago.serviceRequests({
     "updated_after": lastUpdated.toISOString(),
     "extensions": "true"
@@ -96,7 +95,7 @@ function normalizedEmit(requests) {
     
     // save the emit time for our next loop
     prevEmit = expectedEmit;
-    console.log('Expect to emit at', expectedEmit);
+    console.log('Expect to emit Service Reqeuest #%s at %s', request.service_request_id, expectedEmit);
     
     setTimeout(function() {
       // log it

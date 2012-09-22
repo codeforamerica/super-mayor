@@ -1,6 +1,5 @@
 var expect = require('chai').expect;
 var sinon = require('sinon');
-var server = require('../server');
 var Open311 = require('open311');
 var fs = require('fs');
 
@@ -51,7 +50,7 @@ var generateRequests = function (options, callback) {
   // every 5 seconds
   for (var i=0; i < 24; i++) {
     date = new Date( date.getTime() + 5000);
-    requests.push(createRequest(new Date(date.getTime() + Math.floor((Math.random()*5000)+1)), i%6));
+    requests.push(createRequest(new Date(date.getTime() + Math.floor((Math.random()*5000)+1)), i%3));
     console.log("Mocking Request: ", date);
     
   }
@@ -62,3 +61,7 @@ var generateRequests = function (options, callback) {
 var open311 = new Open311('chicago');
 
 var stub = sinon.stub(Open311.prototype, 'serviceRequests', generateRequests);
+
+
+// AND START THE SERVER
+var server = require('../server');
