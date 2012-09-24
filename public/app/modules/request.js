@@ -82,6 +82,7 @@ function(app, Backbone, _) {
     tagName: "tr",
 
     serialize: function() {
+      //console.log(this)
       return { request: this.model.attributes };
     },
 
@@ -99,7 +100,7 @@ function(app, Backbone, _) {
     
     tagName: 'div',
     
-    className: 'beast',
+    className: 'beast', // modified on creation to include the beast-type
 
     serialize: function() {
       return { request: this.model.attributes };
@@ -108,8 +109,12 @@ function(app, Backbone, _) {
     move: function() {
       var self = this;
       var WIDTH = 960;
-      var oldPosx = self.$el.css('right').match(/(-?[0-9]*)px/)[1];
       var SPEED = 4;
+      
+      var oldPosx = 0
+      if (self.$el.css('right')) {
+        oldPosx = self.$el.css('right').match(/(-?[0-9]*)px/)[1];
+      }
       if (self.model.get('sound') === 'update') {
         SPEED = 3;
       }
@@ -122,52 +127,6 @@ function(app, Backbone, _) {
       if (posX > $('#foreground').width()) {
         self.remove();
       } 
-        
-      if (self.$el.position().left < ($('#mayor').position().left + $('#mayor').width())
-          && self.$el.position().left > ($('#mayor').position().left)
-          && ( self.model.get('sound') !== false )
-        ) {
-            
-        // make the mayor jump
-        if (!$('#mayor').hasClass('jump')) {   
-          $('#mayor').addClass('jump');
-          console.log('JUMP!');
-            
-          // and add a jump sound
-          self.$el.append(
-            '<audio src="/assets/audio/jump.mp3" autoplay></audio>'
-          );
-        }
-        // play the sound
-        if (self.model.get('sound') === 'update') {
-          console.log('COIN!');
-            
-          self.$el.append(
-            '<audio src="/assets/audio/coin.mp3" autoplay></audio>'
-          );
-        }
-          
-        // remove the sound from the model
-        self.model.set('sound', false);
-          
-        // add it to our Table too
-        self.parent.insertView("tbody", new Request.Views.Row({
-          model: self.model,
-          // in reverse order
-          append: function(root, child) {
-            $(root).prepend(child);
-          },
-        })).render();    
-      }
-      // only land the mayor if he's passed the beast && he's within 1.5 widths of the beast
-      // to prevent passed beasts grounding the mayor
-      else if ( (self.$el.position().left + self.$el.width()) < ($('#mayor').position().left)
-          && (self.$el.position().left + (1.1 * self.$el.width())) > ($('#mayor').position().left)
-          && $('#mayor').hasClass('jump')
-        ) {      
-        $('#mayor').removeClass('jump');
-        console.log('LAND!');
-      }
     },
 
     initialize: function(options) {
@@ -201,8 +160,7 @@ function(app, Backbone, _) {
     },
     
     addRequest: function(model, collection, options) {
-      
-      // if no sound, just add it to the table
+      // if no sound, just add it to the table (for pre-existing models)
       if( model.get('sound') === false || typeof model.get('sound') === 'undefined') {
         this.insertView("tbody", new Request.Views.Row({
           model: model,
@@ -215,6 +173,16 @@ function(app, Backbone, _) {
       
       // otherwise, we'll add a beast
       this.addBeast(model);
+      
+      // and add it to the table; TODO: make it flash
+      // add it to our Table too
+      this.insertView("tbody", new Request.Views.Row({
+        model: model,
+        // in reverse order
+        append: function(root, child) {
+          $(root).prepend(child);
+        },
+      })).render();
     },
     
     addBeast: function(model) {
@@ -264,6 +232,73 @@ function(app, Backbone, _) {
       this.backgroundX = (posX + SPEED) % WIDTH;
       $('#background').css('background-position', this.backgroundX + 'px 100%' );
     },
+    
+    mayorJump: function(event) {
+      // only jump for the spacebar
+      if (event.keyCode === 32) { 
+        var mayor = $('#mayor');
+        
+        event.preventDefault();
+      
+        // make the mayor jump
+        if (!$(mayor).hasClass('jump')) {
+          $(mayor).addClass('jump');
+          $(mayor).addClass('manual'); // make sure to make it manual
+          console.log('JUMP!');
+          $(mayor).find('audio.jump')[0].play();
+        
+          setTimeout(function() { 
+            $(mayor).removeClass('manual');
+          }, 700);
+        }
+      }
+    },
+    
+    mayorCollision: function() {
+      var self = this;
+      var mayor = $('#mayor');
+      var beasts = self.$el.find('.beast');
+      var jump = $(mayor).find('audio')[0];
+      var underneath = self.$el.find('.beast.underneath').length;
+      
+      // Land the mayor if nothing is underneath him
+      if ( underneath === 0 
+           && $(mayor).hasClass('jump') 
+           && (!$(mayor).hasClass('manual')) 
+      ) {
+        $('#mayor').removeClass('jump');
+      }
+      
+      _.each(beasts, function(beast) {
+        if ( $(beast).position().left < ($(mayor).position().left + $(mayor).width())
+            && ($(mayor).position().left) < ($(beast).position().left + $(beast).width())
+          ) {
+            
+          if ( !$(beast).hasClass('underneath') ) {
+            // first time the mayor encounters this beast
+            $(beast).addClass('underneath')
+            
+            // check if it's a coin block
+            if ($(beast).hasClass('update')) {
+              $(mayor).find('audio.coin')[0].play();
+            }
+          }
+          
+          // make the mayor jump
+          if (!$(mayor).hasClass('jump')) {   
+            $(mayor).addClass('jump');
+            console.log('JUMP!');
+            $(mayor).find('audio.jump')[0].play();
+          }
+        }
+        else {
+          // the beast is not underneath the mayor
+          if ( $(beast).hasClass('underneath') ) {
+            $(beast).removeClass('underneath')
+          }
+        }
+      });
+    },
 
     
     dayNightCycle: function() {
@@ -297,14 +332,21 @@ function(app, Backbone, _) {
       this.on('loop', this.moveForeground, this);
       this.on('loop', this.moveBackground, this);
       this.on('loop', this.dayNightCycle, this);
-    
+      this.on('loop', this.mayorCollision, this);
       this.eventLoop();  
       
-      this.collection.on('reset', function() {console.log("Reset!")})
+      this.collection.on('reset', function() {console.log("Reset!")});
+
+      // have the mayor jump
+      $(document).keypress(this.mayorJump);
     },
+    
+    cleanup: function() {
+      // unbind the mayor jump keypress!
+      $(document).unbind('keypress')
+    }
   });
   
-
   return Request;
 
 });
