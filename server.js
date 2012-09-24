@@ -22,16 +22,24 @@ app.configure(function(){
   app.use(express.methodOverride());
   app.use(express.compress());
   app.use(app.router);
-  app.use(express.static(__dirname + '/public'));
 });
 
 app.configure('development', function(){
   app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
+  
+  // Backbone routing
+  app.use(express.static(__dirname + '/public'));
 });
 
 app.configure('production', function(){
   app.use(express.errorHandler());
   io.set('log level', 1); // reduce logging
+  
+  // Backbone routing: compilation step is included in `npm install` script
+  app.use('/app', express.static(__dirname + '/public/dist/release'));
+  app.use('/assets/js/libs', express.static(__dirname + '/public/dist/release'));
+  app.use('/assets/css', express.static(__dirname + '/public/dist/release'));
+  app.use(express.static(__dirname + '/public'));
 });
 
 
