@@ -1,3 +1,60 @@
+@font-face {
+  font-family: 'uni_05_63regular';
+  src: url('/assets/font/uni05_63-webfont.eot');
+  src: url('/assets/font/uni05_63-webfont.eot?#iefix') format('embedded-opentype'),
+       url('/assets/font/uni05_63-webfont.woff') format('woff'),
+       url('/assets/font/uni05_63-webfont.ttf') format('truetype'),
+       url('/assets/font/uni05_63-webfont.svg#uni_05_63regular') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+body,
+p {
+  font-family: "uni_05_63regular", san-serif;
+  font-size: 15px;
+  color: #000;
+}
+
+a {
+  font-size: inherit;
+  color: #08C;
+  border-bottom: 5px solid transparent;
+  text-decoration: none !important;
+  padding-bottom: 0;
+}
+
+a:hover {
+  color: #08C !important;
+  border-bottom: 3px solid #08C;
+}
+
+table {
+  margin-top: 0;
+}
+
+thead {
+  background-color: #000;
+}
+
+table thead tr th {
+  color: #ffffff; 
+}
+
+table tr {
+  border-top: 2px solid #000;
+}
+
+.table tbody tr:hover td,
+.table tbody tr:hover th {
+  background-color: inherit;
+}
+
+abbr.timeago[title] {
+  cursor: inherit;
+  border-bottom: none;
+}
+
 
 audio,
 .audio {
@@ -7,12 +64,9 @@ audio,
 
 #scene {
   height: 236px;
-  margin-bottom: 20px;
   position: relative;
   z-index: -1000;
   overflow: hidden;
-  border: 1px solid #DDD;
-  border-radius: 4px;
   border-bottom: 8px solid black;
   transition: background-color 20s;
 }
@@ -71,4 +125,44 @@ audio,
 #scene .beast.update {
   bottom: 176px;
   background-image: url(../img/box.gif);
+}
+
+#logo {
+  float: left;
+  margin: 5px 10px -10px 10px;
+}
+
+#description {
+  margin: 20px 0 0 280px;
+  font-size: 25px;
+  line-height: 1.0;
+}
+
+#description a {
+  font-size: inherit;
+  color: #fbc321;
+  border-bottom: 5px solid transparent;
+  text-decoration: none;
+  padding-bottom: 0;
+}
+#description a:hover {
+  border-bottom: 5px solid #fbc321;
+}
+
+@media (min-width: 480px) and (max-width: 768px) {
+  #description {
+    font-size: 20px;;
+  }
+}
+
+@media (max-width: 480px) {
+  #logo {
+    display: block;
+    float: none;
+    text-align: center;
+    margin: 0 auto -10px;
+  }
+  #description {
+    display: none;
+  }
 }

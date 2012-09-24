@@ -5,7 +5,8 @@ define([
   // Third-party libraries.
   "backbone",
   "lodash",
-
+  "timeago",
+  "ui"
 ],
 
 function(app, Backbone, _) {
@@ -32,9 +33,21 @@ function(app, Backbone, _) {
       return -(new Date(a.get('updated_datetime')).getTime());
     },
     
+    maxSize: 5,
+    
+    checkSize: function() {
+      if (this.models.length > this.maxSize) {
+        console.log('TOO BIG!')
+        this.models = this.models.slice(0, this.maxSize);
+      }
+    },
+    
     initialize: function(models, options) {
       var self = this;
       this.socket = options.socket;
+      
+      // this.on('add', this.checkSize, this);
+      // this.on('reset', this.checkSize, this);      
       
       this.socket.on('existing-requests', function (data) {
         console.log('Loaded %d Service Requests', data.length)
@@ -80,6 +93,15 @@ function(app, Backbone, _) {
     serialize: function() {
       return { request: this.model.attributes };
     },
+    
+    afterRender: function() {
+      this.$el.find('abbr.timeago').timeago();
+      
+      if (this.model.get('sound')) {
+        this.$el.effect("highlight", {color: "#FBC321"}, 1500);
+        console.log('silent');
+      }
+    },
 
     initialize: function() {
       // nothing
@@ -123,7 +145,7 @@ function(app, Backbone, _) {
         self.remove();
       } 
     },
-
+    
     initialize: function(options) {
       this.parent = options.parent;
       var self = this;

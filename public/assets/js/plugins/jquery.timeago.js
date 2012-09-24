@@ -34,18 +34,18 @@
       strings: {
         prefixAgo: null,
         prefixFromNow: null,
-        suffixAgo: "ago",
+        suffixAgo: "",
         suffixFromNow: "from now",
-        seconds: "less than a minute",
-        minute: "about a minute",
-        minutes: "%d minutes",
-        hour: "about an hour",
-        hours: "about %d hours",
-        day: "a day",
+        seconds: "Just now",
+        minute: "Just now",
+        minutes: "%d min ago",
+        hour: "An hour ago",
+        hours: "%d hours ago",
+        day: "A day",
         days: "%d days",
-        month: "about a month",
+        month: "About a month",
         months: "%d months",
-        year: "about a year",
+        year: "About a year",
         years: "%d years",
         wordSeparator: " ",
         numbers: []
@@ -76,6 +76,7 @@
 
       var words = seconds < 45 && substitute($l.seconds, Math.round(seconds)) ||
         seconds < 90 && substitute($l.minute, 1) ||
+        minutes < 3 && substitute($l.minute, 1) ||
         minutes < 45 && substitute($l.minutes, Math.round(minutes)) ||
         minutes < 90 && substitute($l.hour, 1) ||
         hours < 24 && substitute($l.hours, Math.round(hours)) ||

@@ -14,7 +14,9 @@ require.config({
     lodash: "../assets/js/libs/lodash",
     backbone: "../assets/js/libs/backbone",
     bootstrap: "../assets/vendor/bootstrap/js/bootstrap",
-    io: "../assets/vendor/socket.io"
+    io: "../assets/vendor/socket.io",
+    ui: "../assets/js/plugins/jquery-ui.custom",
+    timeago: "../assets/js/plugins/jquery.timeago"
   },
 
   shim: {
@@ -26,6 +28,14 @@ require.config({
 
     bootstrap: {
       deps: ["jquery"],
+    },
+    
+    ui: {
+      deps: ["jquery"]
+    },
+    
+    timeago: {
+      deps: ["jquery"]
     },
     
     io: {
