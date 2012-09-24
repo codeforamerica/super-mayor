@@ -23,7 +23,7 @@ function(app, _, io, Request) {
       app.useLayout("main").render();
       
       app.layout.setViews({
-        "#body": new Request.Views.List({
+        "#page": new Request.Views.List({
           collection: this.requests,
         }),
       }).render();

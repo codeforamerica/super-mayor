@@ -149,18 +149,42 @@ audio,
   border-bottom: 5px solid transparent;
   text-decoration: none;
   padding-bottom: 0;
+  white-space: nowrap;
 }
 #description a:hover {
   border-bottom: 5px solid #fbc321;
 }
 
-@media (min-width: 480px) and (max-width: 768px) {
+footer {
+  background-color: #eee;
+  font-size: 15px;
+}
+
+footer p {
+  padding: 15px 20px;
+}
+
+footer strong {
+  color: #fbc321;
+}
+
+@media (min-width: 480px) and (max-width: 960px) {
   #description {
-    font-size: 20px;;
+    margin-top: 25px;
+    font-size: 17px;;
   }
 }
 
 @media (max-width: 480px) {
+  body {
+    padding: 0 !important;
+    font-size: 12.5px;
+  }
+  
+  footer {
+    margin-bottom: -10px;
+  }
+    
   #logo {
     display: block;
     float: none;
@@ -169,5 +193,16 @@ audio,
   }
   #description {
     display: none;
+  }
+  
+  td.srnum {
+    text-align: center;
+    font-size: 30px;
+    lineheight: 2;
+    vertical-align: middle;
+  }
+  
+  td.srnum a:hover {
+    border-color: transparent;
   }
 }
