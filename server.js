@@ -9,8 +9,9 @@ var __              = require('lodash'),
     chicago         = new Open311('chicago'), // Configure the Open311 endpoint
     REFRESHMIN      = 2, // refresh things every how many minutes
     LASTUPDATED     = new Date(), // when this was last updated
-    cachedRequests  = [], // a holder for all our requests
-    MAXCACHE        = 100,// maximum number of requests to cache
+    REQUESTSCACHE  = [],  // a holder for all our requests
+    MAXCACHE        = 100, // maximum number of requests to cache
+    EMITDELAY       = 1500, // minimum time between emits 
     prevEmit        = new Date(0); // the last time we emitted something
     
 
@@ -45,23 +46,23 @@ app.configure('production', function(){
 
 // Get requests from the last hour on startup
 LASTUPDATED = new Date(LASTUPDATED.getTime() - 60*60*1000);
-getRequests(LASTUPDATED);
+getRequests(LASTUPDATED, { emit: false });
 
 //
 // CRON FUNCTION
 //
 new cron.CronJob('0 */' + REFRESHMIN + ' * * * *', function(){
-  getRequests(LASTUPDATED);
+  getRequests(LASTUPDATED, { emit: false });
 }, null, // no function to call when finished
   true // Start the job right now
 );
 
-function getRequests(lastUpdated) {
+function getRequests(lastUpdated, options) {
   chicago.serviceRequests({
     "updated_after": lastUpdated.toISOString(),
     "extensions": "true"
   }, function(err, data) {
-    if (err) { console.log('Error retrieving request:', err); return; }
+    if (err) { console.log('Error retrieving requests:', err); return; }
       
     console.log("Retrieved %d service requests at %s", data.length, LASTUPDATED.toISOString());
       
@@ -77,8 +78,8 @@ function getRequests(lastUpdated) {
       .sortBy('updated_datetime')       // Sort by updated_datetime
       .value();                         // and complete the chain
       
-    // emit the requests
-    normalizedEmit(requests);
+    // Add/emit requests
+    addRequests(requests, options);
   });
     
   // Update when we last updated
@@ -90,53 +91,67 @@ function getRequests(lastUpdated) {
  * Take a collection of requests and emit them over a period of time
  *
  */
-function normalizedEmit(requests) {
-  var MINDELAY = 1300; // minimum time between emits
+function addRequests(requests, options) {
+  var i, expectedEmit;
+  
+  options = __.defaults(options, {
+    emit: true
+  });
+  
+  if (options.emit === 'false') {
+    for (i = 0; i < requests.length; i++) {
+      cacheRequest(requests[i]);
+    }
+    return; // don't emit anything
+  }
   
   async.forEachSeries(requests, function(request, done) {
-    var expectedEmit = new Date(request['updated_datetime'].getTime() + (REFRESHMIN * 60000));
+    expectedEmit = new Date(request['updated_datetime'].getTime() + (REFRESHMIN * 60000));
     
-    // check if expectedEmit falls before our Minimum Delay; if so, set it to our minimum delay
-    if (expectedEmit.getTime() < prevEmit.getTime() + MINDELAY) {
-      expectedEmit = new Date(prevEmit.getTime() + MINDELAY)
+    // check if expectedEmit falls before our Minimum Delay; 
+    if (expectedEmit.getTime() < prevEmit.getTime() + EMITDELAY) {
+      // if so, set it to our minimum delay
+      expectedEmit = new Date(prevEmit.getTime() + EMITDELAY)
     }
     
     // save the emit time for our next loop
     prevEmit = expectedEmit;
-    console.log('Expect to emit Service Reqeuest #%s at %s', request.service_request_id, expectedEmit);
     
-    setTimeout(function() {
-      // log it
-      console.log('Emitting Service Request #%s at %s', request.service_request_id, (new Date).toISOString());
-      
+    // Emit it at our expectedEmit time
+    new cron.CronJob(expectedEmit, function(){
       // broadcast globally
       io.sockets.emit("new-request", request);
-    
-      // // broadcast to an individual ward channel
-      // if ( (typeof request['extended_attributes'] !== 'undefined') && 
-      //      (typeof request['extended_attributes'].ward !== 'undefined')
-      //    ) {
-      //   io.sockets.in("ward-" + request['extended_attributes'].ward).emit("request", request);
-      // }
-      
-      // Add them to our big object of cached requests      
-      // if it already exists, remove it
-      cachedRequests = __.reject(cachedRequests, function(cachedRequest) {
-        if (cachedRequest['service_request_id'] === request['service_request_id']) {
-          return true;
-        }
-        return false;
-      });
-      cachedRequests.unshift(request);
-      
-      // ensure that we don't cache too many requests
-      if (cachedRequests.length >= MAXCACHE ) {
-        cachedRequests.pop();
-      }
-    }, expectedEmit.getTime() - (new Date).getTime() );
-   
+      cacheRequest(request);
+    }, null, // no function to call when finished
+      true // Start the job right now
+    );
    done(); 
   });
+}
+
+function cacheRequest(request) {
+  var insertion; 
+  
+  // Remove the request from our list of existing cached requests 
+  // (in case it already exists)
+  REQUESTSCACHE = __.reject(REQUESTSCACHE, function(cRequest) {
+    if (cRequest['service_request_id'] === request['service_request_id']) {
+      return true;
+    }
+    return false;
+  });
+
+  // Insert the request in order (so will probably end up at the end)
+  insertion = __.sortedIndex(REQUESTSCACHE, request, function(request) { return request['updated_datetime'] });
+  REQUESTSCACHE.splice(insertion, 0, request);
+  
+  // ensure that we don't cache too many requests
+  if (REQUESTSCACHE.length >= MAXCACHE ) {
+    // if so, pop one off the top
+    REQUESTSCACHE.shift();
+  }
+  console.log('Cached request #%s', request['service_request_id']);
+  console.log('Cache is now size of %d', REQUESTSCACHE.length);
 }
 
 // assuming io is the Socket.IO server object
@@ -146,7 +161,7 @@ io.configure(function () {
 });
 
 io.sockets.on('connection', function (socket) {
-  socket.emit('existing-requests', cachedRequests); // send all of our requests on the first connection
+  socket.emit('existing-requests', REQUESTSCACHE); // send all of our requests on the first connection
 });
 
 app.listen(PORT, function(){

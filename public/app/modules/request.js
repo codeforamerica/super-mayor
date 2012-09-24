@@ -39,11 +39,7 @@ function(app, Backbone, _) {
       this.socket.on('existing-requests', function (data) {
         console.log('Loaded %d Service Requests', data.length)
         
-        for(var i; i < data.length; i++) {
-          data[i].sound = false;
-        }
-
-        self.add(data);
+        self.add(data, {silent: true});
         self.trigger('reset');
       });
       
@@ -82,12 +78,11 @@ function(app, Backbone, _) {
     tagName: "tr",
 
     serialize: function() {
-      //console.log(this)
       return { request: this.model.attributes };
     },
 
     initialize: function() {
-      // this.collection.on("reset", this.render, this);
+      // nothing
     },
     
   });
@@ -161,15 +156,9 @@ function(app, Backbone, _) {
     
     addRequest: function(model, collection, options) {
       // if no sound, just add it to the table (for pre-existing models)
-      if( model.get('sound') === false || typeof model.get('sound') === 'undefined') {
-        this.insertView("tbody", new Request.Views.Row({
-          model: model,
-          append: function(root, child) {
-            $(root).prepend(child);
-          },
-        })).render();
-        return;
-      }
+      // if( model.get('sound') === false || typeof model.get('sound') === 'undefined') {
+      //   return;
+      // }
       
       // otherwise, we'll add a beast
       this.addBeast(model);
@@ -325,6 +314,7 @@ function(app, Backbone, _) {
     
     initialize: function() {
       this.collection.on('reset', this.render, this);
+      
       this.collection.on('add', this.addRequest, this);
       
       this.daytime = this.dayNightCycle();
