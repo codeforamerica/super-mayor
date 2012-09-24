@@ -39,9 +39,7 @@ function(app, _, io, Request) {
     initialize: function() {
       var self = this;
       app.useLayout("main");
-      
-      self.requests;
-      
+            
       var socket = io.connect('/');
       this.requests = new Request.Collection(null, {socket: socket});
             
