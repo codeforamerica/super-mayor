@@ -7,7 +7,7 @@ var SRID = 0
 
 var createRequest = function (updatedDatetime, updated) {
   var request =  {
-    service_request_id: "12-" + SRID++,
+    service_request_id: "12-0000" + SRID++,
     status: "open",
     service_name: "Building Violation",
     service_code: "4fd3bd72e750846c530000cd",

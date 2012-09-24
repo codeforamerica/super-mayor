@@ -50,6 +50,11 @@ table tr {
   background-color: inherit;
 }
 
+td.srnum {
+ white-space:nowrap;
+}
+
+
 abbr.timeago[title] {
   cursor: inherit;
   border-bottom: none;
