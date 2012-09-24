@@ -314,9 +314,8 @@ function(app, Backbone, _) {
     
     dayNightCycle: function() {
       // change the background to be night/day
-      var currentHour = (new Date()).getHours() + ( (new Date()).getTimezoneOffset()/60 );
-      currentHour = currentHour%24;
-      if ( (currentHour > 17) || (currentHour < 8) ) {
+      currentHour = (new Date()).getHours() + ( (new Date()).getTimezoneOffset()/60 ) % 24;
+      if ( (currentHour > 24) || (currentHour < 11) ) {
         $('#scene').addClass('night');
         this.daytime = false;
       } else {

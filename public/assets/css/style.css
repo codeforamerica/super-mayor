@@ -25,7 +25,7 @@ a {
 }
 
 a:hover {
-  color: #08C !important;
+  color: #08C;
   border-bottom: 3px solid #08C;
 }
 
@@ -51,7 +51,7 @@ table tr {
 }
 
 td.srnum {
- white-space:nowrap;
+ white-space: nowrap;
 }
 
 
