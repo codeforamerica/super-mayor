@@ -18,7 +18,7 @@ function(app, Backbone, _) {
   //
   Request.Model = Backbone.Model.extend({
        
-    idAttribute: "service_request_id",
+    idAttribute: "service_request_id"
         
   });
 
@@ -37,7 +37,7 @@ function(app, Backbone, _) {
     
     checkSize: function() {
       if (this.models.length > this.maxSize) {
-        console.log('TOO BIG!')
+        console.log('TOO BIG!');
         this.models = this.models.slice(0, this.maxSize);
       }
     },
@@ -50,7 +50,7 @@ function(app, Backbone, _) {
       // this.on('reset', this.checkSize, this);      
       
       this.socket.on('existing-requests', function (data) {
-        console.log('Loaded %d Service Requests', data.length)
+        console.log('Loaded %d Service Requests', data.length);
         
         self.add(data, {silent: true});
         self.trigger('reset');
@@ -61,7 +61,7 @@ function(app, Backbone, _) {
         // check if there is an existing request; if so remove it
         var existingRequest = self.get(request['service_request_id']);
         if (existingRequest) {
-          self.remove(existingRequest, {silent: true})
+          self.remove(existingRequest);
           console.log('Updated Service Request #%s', request['service_request_id']);
         }
         else {
@@ -78,7 +78,7 @@ function(app, Backbone, _) {
         }
         self.add(request);
       });
-    },
+    }
     
   });
   
@@ -105,7 +105,7 @@ function(app, Backbone, _) {
 
     initialize: function() {
       // nothing
-    },
+    }
     
   });
   
@@ -128,7 +128,7 @@ function(app, Backbone, _) {
       var WIDTH = 960;
       var SPEED = 4;
       
-      var oldPosx = 0
+      var oldPosx = 0;
       if (self.$el.css('right')) {
         oldPosx = self.$el.css('right').match(/(-?[0-9]*)px/)[1];
       }
@@ -151,7 +151,7 @@ function(app, Backbone, _) {
       var self = this;
       this.className =  'best ' + this.model.get('sound');
       this.parent.on('loop', this.move, this);       
-    },
+    }
   });
   
   //
@@ -192,7 +192,7 @@ function(app, Backbone, _) {
         // in reverse order
         append: function(root, child) {
           $(root).prepend(child);
-        },
+        }
       })).render();
     },
     
@@ -209,7 +209,7 @@ function(app, Backbone, _) {
         self.insertView("#scene", new Request.Views.Beast({
           model: model,
           parent: self,
-          className: 'beast ' + model.get('sound'),
+          className: 'beast ' + model.get('sound')
         })).render();
       }, timeout);
     },
@@ -273,21 +273,21 @@ function(app, Backbone, _) {
       var underneath = self.$el.find('.beast.underneath').length;
       
       // Land the mayor if nothing is underneath him
-      if ( underneath === 0 
-           && $(mayor).hasClass('jump') 
-           && (!$(mayor).hasClass('manual')) 
+      if ( underneath === 0 &&
+           $(mayor).hasClass('jump') &&
+           (!$(mayor).hasClass('manual')) 
       ) {
         $('#mayor').removeClass('jump');
       }
       
       _.each(beasts, function(beast) {
-        if ( $(beast).position().left < ($(mayor).position().left + $(mayor).width())
-            && ($(mayor).position().left) < ($(beast).position().left + $(beast).width())
+        if ( $(beast).position().left < ($(mayor).position().left + $(mayor).width()) &&
+            ($(mayor).position().left) < ($(beast).position().left + $(beast).width())
           ) {
             
           if ( !$(beast).hasClass('underneath') ) {
             // first time the mayor encounters this beast
-            $(beast).addClass('underneath')
+            $(beast).addClass('underneath');
             
             // check if it's a coin block
             if ($(beast).hasClass('update')) {
@@ -305,7 +305,7 @@ function(app, Backbone, _) {
         else {
           // the beast is not underneath the mayor
           if ( $(beast).hasClass('underneath') ) {
-            $(beast).removeClass('underneath')
+            $(beast).removeClass('underneath');
           }
         }
       });
@@ -347,7 +347,7 @@ function(app, Backbone, _) {
       this.on('loop', this.mayorCollision, this);
       this.eventLoop();  
       
-      this.collection.on('reset', function() {console.log("Reset!")});
+      this.collection.on('reset', function() { console.log("Reset!"); });
 
       // have the mayor jump
       $(document).keypress(this.mayorJump);
@@ -355,7 +355,7 @@ function(app, Backbone, _) {
     
     cleanup: function() {
       // unbind the mayor jump keypress!
-      $(document).unbind('keypress')
+      $(document).unbind('keypress');
     }
   });
   
