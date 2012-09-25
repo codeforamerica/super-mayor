@@ -36,7 +36,7 @@ function(app, Backbone, _) {
       return -(new Date(a.get('updated_datetime')).getTime());
     },
     
-    maxSize: 60,
+    maxSize: 30,
     
     checkSize: function() {
       if (this.models.length > this.maxSize) {

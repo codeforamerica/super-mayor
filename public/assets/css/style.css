@@ -19,14 +19,13 @@ p {
 a {
   font-size: inherit;
   color: #08C;
-  border-bottom: 5px solid transparent;
   text-decoration: none !important;
   padding-bottom: 0;
 }
 
 a:hover {
   color: #08C;
-  border-bottom: 3px solid #08C;
+  text-shadow: 0.15em 0.15em 0 #000
 }
 
 table {
@@ -141,18 +140,15 @@ audio,
   margin: 20px 0 0 280px;
   font-size: 25px;
   line-height: 1.0;
+  text-shadow: 0 0 0 #000;
 }
 
 #description a {
   font-size: inherit;
   color: #fbc321;
-  border-bottom: 5px solid transparent;
   text-decoration: none;
   padding-bottom: 0;
   white-space: nowrap;
-}
-#description a:hover {
-  border-bottom: 5px solid #fbc321;
 }
 
 footer {
