@@ -55,8 +55,11 @@ getRequests(LASTUPDATED, function (err, requests) {
   requests.reverse(); // because we're directly storing them,
                       //  we need to sort them DESC
   if (requests.length > MAXCACHE) {
-    REQUESTSCACHE = requests.slice(0, MAXCACHE);
+    requests = requests.slice(0, MAXCACHE);
   }
+  
+  REQUESTSCACHE = requests; 
+  console.log("Starting with %d requests in our cache", REQUESTSCACHE.length)
 });
 
 //

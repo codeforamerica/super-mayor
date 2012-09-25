@@ -36,7 +36,7 @@ function(app, Backbone, _) {
       return -(new Date(a.get('updated_datetime')).getTime());
     },
     
-    maxSize: 25,
+    maxSize: 60,
     
     checkSize: function() {
       if (this.models.length > this.maxSize) {
@@ -89,7 +89,7 @@ function(app, Backbone, _) {
       this.socket = options.socket;
       
       this.fetch();
-      this.on('add', this.checkSize, this);
+      // this.on('add', this.checkSize, this);
       // this.on('reset', this.checkSize, this);      
       
       this.newRequest = _.bind(this.newRequest, this);
@@ -188,6 +188,10 @@ function(app, Backbone, _) {
           model: request
         }));
       }, this);
+    },
+    
+    afterRender: function() {
+      $('abbr.timeago').timeago();
     },
     
     addRequest: function(model, collection, options) {

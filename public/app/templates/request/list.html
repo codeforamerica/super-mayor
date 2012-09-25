@@ -1,13 +1,3 @@
-<%
-  var currentHour = (new Date()).getHours() + ( (new Date()).getTimezoneOffset()/60 );
-  currentHour = currentHour%24;
-  if ( (currentHour > 17) || (currentHour < 8) ) {
-    sceneClass = "night";
-  } else {
-    sceneClass = "";
-  }
-%>
-
 <div id="scene" class="<%= daytime ? 'day' : 'night' %>">
   <div id="foreground" style="background-position: 0px 100%"></div>
   <div id="background" style="background-position: 0px 100%"></div>
