@@ -16,7 +16,9 @@ _Skyline graphic by [TJ McKimmey](http://tjmckimmey.com/), logo by [Angel Kittiy
 
 Potential Reusability in other Open311 cities
 ------------------------------
- Slim to none. This application uses a non-standard, Chicago-specific query argument, `updated_after` that allows the querying service requests by when they were last _updated_ (the official Open311 specification only allows querying by _creation_ date).
+Slim to none. This application uses a non-standard, Chicago-specific query argument, `updated_after` (e.g. `/requests.json?updated_after=<DATETIME>`) when querying requeststhat allows the querying service requests by when they were last _updated_ (the official Open311 specification only allows querying by _creation_ date).
+ 
+You can find more information about non-standard, Chicago-specific API extensions in [Chicago's Open311 Documentation](http://dev.cityofchicago.org/docs/api/service_requests).
  
 Installation and Configuration
 ------------------------------
