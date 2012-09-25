@@ -137,34 +137,28 @@ function(app, Backbone, _) {
       return { request: this.model.attributes };
     },
     
+    posX: -36,
+    
     move: function() {
-      var self = this;
-      var WIDTH = 960;
       var SPEED = 4;
       
-      var oldPosx = 0;
-      if (self.$el.css('right')) {
-        oldPosx = self.$el.css('right').match(/(-?[0-9]*)px/)[1];
-      }
-      if (self.model.get('lastAction') === 'updated') {
+      if (this.model.get('lastAction') === 'updated') {
         SPEED = 3;
       }
       
-      var posX = Number(oldPosx) + SPEED;
-      // set the position
-      self.$el.css('right', posX + 'px' );
+      this.posX = this.posX + SPEED;
+      this.$el.css('right', this.posX + 'px' );
       
       // remove the element if it goes beyond the width of the scene
-      if (posX > $('#foreground').width()) {
-        self.remove();
+      if (this.posX > this.width) {
+        this.remove();
       } 
     },
     
     initialize: function(options) {
       this.parent = options.parent;
-      var self = this;
       this.className =  'beast ' + this.model.get('lastAction');
-      this.parent.on('loop', this.move, this);       
+      this.parent.on('loop', this.move, this);
     }
   });
   
@@ -177,7 +171,8 @@ function(app, Backbone, _) {
     serialize: function() {
       return { 
         collection: this.collection,
-        sceneForegroundX: this.sceneForegroundX,
+        foregroundX: this.foregroundX,
+        backgroundX: this.backgroundX,
         daytime: this.daytime
       };
     },
@@ -191,7 +186,16 @@ function(app, Backbone, _) {
     },
     
     afterRender: function() {
-      $('abbr.timeago').timeago();
+      this.$mayor = this.$el.find('#mayor');
+      
+      
+      this.resize();
+      // startup our loop after the render
+      this.on('loop', this.moveForeground, this);
+      this.on('loop', this.moveBackground, this);
+      this.on('loop', this.dayNightCycle, this);
+      this.on('loop', this.mayorCollision, this);
+      this.eventLoop();
     },
     
     addRequest: function(model, collection, options) {
@@ -208,119 +212,109 @@ function(app, Backbone, _) {
       })).render();
     },
     
-    addBeast: function(model) {
-      var self = this;
-      
+    addBeast: function(model) {    
       var TOTALTIMEOUT = 150 * 1000; // we now things will be delayed by 2 minutes, but give it 30 seconds to cross screen
       var timeout = (new Date()).getTime() - ((new Date(model.get('updated_datetime'))).getTime() + 120000);
       if (timeout < 0) {
         timeout = 0;
       }      
       // add it to the scene
-      setTimeout(function() {        
-        self.insertView("#scene", new Request.Views.Beast({
+      setTimeout(_.bind(function() {        
+        this.insertView("#scene", new Request.Views.Beast({
           model: model,
-          parent: self,
+          parent: this,
           className: 'beast ' + model.get('lastAction')
         })).render();
-      }, timeout);
+      }, this), timeout);
     },
     
     daytime: true,
     foregroundX: 0,
     backgroundX: 0,
+    width: 960,
+    $mayor: false,
+    mayorWidth: 48,
     
     moveForeground: function() {
       // scroll the foreground
       var SPEED = -2;
       var WIDTH = 960;
-      var posX = this.foregroundX;
-      var foregroundPos= $('#foreground').css('background-position');
-      if (foregroundPos) {
-        posX = Number( foregroundPos.match(/(-?[0-9]*)px 100%/)[1] );
-      }
-      this.foregroundX = (posX + SPEED) % WIDTH;
-      $('#foreground').css('background-position', this.foregroundX + 'px 100%' );
+      this.foregroundX = (this.foregroundX + SPEED) % WIDTH;
+      this.$el.find('#foreground').css('background-position', this.foregroundX + 'px 100%' );
     },
     
     moveBackground: function() {
       // scroll the background
       var SPEED = -1;
       var WIDTH = 315;
-      var posX = this.backgroundX;
-      var backgroundPos= $('#background').css('background-position');
-      if (backgroundPos) {
-        posX = Number( backgroundPos.match(/(-?[0-9]*)px 100%/)[1] );
-      }
-      this.backgroundX = (posX + SPEED) % WIDTH;
-      $('#background').css('background-position', this.backgroundX + 'px 100%' );
+      this.backgroundX = (this.backgroundX + SPEED) % WIDTH;
+      this.$el.find('#background').css('background-position', this.backgroundX + 'px 100%' );
     },
     
     mayorJump: function(event) {
       // only jump for the spacebar
       if (event.keyCode === 32) { 
-        var mayor = $('#mayor');
-        
         event.preventDefault();
       
         // make the mayor jump
-        if (!$(mayor).hasClass('jump')) {
-          $(mayor).addClass('jump');
-          $(mayor).addClass('manual'); // make sure to make it manual
+        if (!this.$mayor.hasClass('jump')) {
+          this.$mayor.addClass('jump');
+          this.$mayor.addClass('manual'); // make sure to make it manual
           console.log('JUMP!');
-          $(mayor).find('audio.jump')[0].play();
+          this.$mayor.find('audio.jump')[0].play();
         
-          setTimeout(function() { 
-            $(mayor).removeClass('manual');
-          }, 700);
+          setTimeout(_.bind(function() { 
+            this.$mayor.removeClass('manual');
+          }, this), 700);
         }
       }
     },
     
     mayorCollision: function() {
-      var self = this;
-      var mayor = $('#mayor');
-      var beasts = self.$el.find('.beast');
-      var jump = $(mayor).find('audio')[0];
-      var underneath = self.$el.find('.beast.underneath').length;
+      var beasts = this.$el.find('.beast');
+      var underneath = this.$el.find('.beast.underneath').length;      
       
       // Land the mayor if nothing is underneath him
       if ( underneath === 0 &&
-           $(mayor).hasClass('jump') &&
-           (!$(mayor).hasClass('manual')) 
+           this.$mayor.hasClass('jump') &&
+           (!this.$mayor.hasClass('manual')) 
       ) {
-        $('#mayor').removeClass('jump');
+        this.$mayor.removeClass('jump');
       }
       
-      _.each(beasts, function(beast) {
-        if ( $(beast).position().left < ($(mayor).position().left + $(mayor).width()) &&
-            ($(mayor).position().left) < ($(beast).position().left + $(beast).width())
+      var mayorLeft = $(mayor).position().left;
+      
+      _.each(beasts, _.bind(function(beast) {
+        var $beast = $(beast);
+        var beastLeft = $beast.position().left;
+        var beastWidth = $beast.width();
+        
+        if (beastLeft  < (mayorLeft + this.mayorWidth) &&
+            (mayorLeft) < (beastLeft + beastWidth)
           ) {
             
-          if ( !$(beast).hasClass('underneath') ) {
+          if ( !$beast.hasClass('underneath') ) {
             // first time the mayor encounters this beast
-            $(beast).addClass('underneath');
+            $beast.addClass('underneath');
             
             // check if it's a coin block
-            if ($(beast).hasClass('update')) {
-              $(mayor).find('audio.coin')[0].play();
+            if ($beast.hasClass('update')) {
+              this.$mayor.find('audio.coin')[0].play();
             }
           }
           
           // make the mayor jump
-          if (!$(mayor).hasClass('jump')) {   
-            $(mayor).addClass('jump');
+          if (!this.$mayor.hasClass('jump')) {   
+            this.$mayor.addClass('jump');
             console.log('JUMP!');
-            $(mayor).find('audio.jump')[0].play();
+            this.$mayor.find('audio.jump')[0].play();
           }
         }
         else {
           // the beast is not underneath the mayor
-          if ( $(beast).hasClass('underneath') ) {
-            $(beast).removeClass('underneath');
-          }
+          $beast.removeClass('underneath');
         }
-      });
+      }, this));
     },
 
     
@@ -338,35 +332,33 @@ function(app, Backbone, _) {
     
     eventLoop: function() {
       var EVENTRATE = 50;
-      var self = this;
       
-      setInterval(function() {
-        self.trigger('loop');
-      }, EVENTRATE);
+      setInterval(_.bind(function() {
+        this.trigger('loop');
+      }, this), EVENTRATE);
     },
     
-    initialize: function() {
+    resize: function() {
+      this.width = this.$el.find('#foreground').width();
+      this.mayorWidth = this.$el.find('#mayor').width();
+    },
+    
+    initialize: function() { 
       this.collection.on('reset', this.render, this);
-      
       this.collection.on('add', this.addRequest, this);
-      
       this.daytime = this.dayNightCycle();
-      
-      this.on('loop', this.moveForeground, this);
-      this.on('loop', this.moveBackground, this);
-      this.on('loop', this.dayNightCycle, this);
-      this.on('loop', this.mayorCollision, this);
-      this.eventLoop();  
       
       this.collection.on('reset', function() { console.log("Reset!"); });
 
       // have the mayor jump
-      $(document).keypress(this.mayorJump);
+      $(document).keypress(_.bind(this.mayorJump, this));
+      $(window).bind("resize.app", _.bind(this.resize, this));
     },
     
     cleanup: function() {
       // unbind the mayor jump keypress!
       $(document).unbind('keypress');
+      $(window).unbind("resize.app");
     }
   });
   
