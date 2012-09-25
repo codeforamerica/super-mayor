@@ -40,7 +40,6 @@ function(app, Backbone, _) {
     
     checkSize: function() {
       if (this.models.length > this.maxSize) {
-        var outdatedRequests = [];
         console.log('TOO BIG! There are %d models in our collection', this.models.length);
         // remove everything older than 1 hour
         var outdatedRequests = _.filter(this.models, function(request, index) {
