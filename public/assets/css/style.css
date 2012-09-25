@@ -127,7 +127,7 @@ audio,
   right: -36px;
 }
 
-#scene .beast.update {
+#scene .beast.updated {
   bottom: 176px;
   background-image: url(../img/box.gif);
 }

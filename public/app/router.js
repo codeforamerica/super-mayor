@@ -26,7 +26,7 @@ function(app, _, io, Request) {
         "#page": new Request.Views.List({
           collection: this.requests,
         }),
-      }).render();
+      });
       
       app.layout.render();
     },
@@ -41,7 +41,7 @@ function(app, _, io, Request) {
       app.useLayout("main");
             
       var socket = io.connect('/');
-      this.requests = new Request.Collection(null, {socket: socket});
+      this.requests = new Request.Collection(null, { socket: socket });
             
       app.layout.setViews({
         "#navbar": new Backbone.View({

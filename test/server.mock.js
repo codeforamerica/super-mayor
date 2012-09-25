@@ -44,17 +44,18 @@ var createRequest = function (updatedDatetime, updated) {
 }
 
 var generateRequests = function (options, callback) {
+  var updatedAfter = new Date( options['updated_after'] );
   console.log('GENERATING!')
   var requests = [];
-  var date = new Date((new Date()).getTime() - (2 * 60 * 1000));
-  // every 5 seconds
-  for (var i=0; i < 24; i++) {
+  var date = new Date(updatedAfter);
+  // every 5 seconds between
+  var i = 0
+  while (date.getTime() < new Date().getTime()) {
     date = new Date( date.getTime() + 5000);
-    requests.push(createRequest(new Date(date.getTime() + Math.floor((Math.random()*5000)+1)), i%3));
-    console.log("Mocking Request: ", date);
-    
+    console.log("Mocking a request for %s", date)
+    requests.unshift(createRequest(new Date(date.getTime() + Math.floor((Math.random()*5000))), i%3));
+    i++
   }
-  
   callback(null, requests);
 }
 

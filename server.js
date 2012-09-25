@@ -10,7 +10,7 @@ var __              = require('lodash'),
     REFRESHMIN      = 2, // refresh things every how many minutes
     LASTUPDATED     = new Date(), // when this was last updated
     REQUESTSCACHE  = [],  // a holder for all our requests
-    MAXCACHE        = 100, // maximum number of requests to cache
+    MAXCACHE        = 50, // maximum number of requests to cache
     EMITDELAY       = 1500, // minimum time between emits 
     prevEmit        = new Date(0); // the last time we emitted something
     
@@ -46,28 +46,47 @@ app.configure('production', function(){
 
 // Get requests from the last hour on startup
 LASTUPDATED = new Date(LASTUPDATED.getTime() - 60*60*1000);
-getRequests(LASTUPDATED, { emit: false });
+getRequests(LASTUPDATED, function (err, requests) {
+  if (err) {
+    console.log("Error retrieving initial requests: %s", err);
+    return;
+  }
+  LASTUPDATED = new Date();
+  requests.reverse(); // because we're directly storing them,
+                      //  we need to sort them DESC
+  if (requests.length > MAXCACHE) {
+    REQUESTSCACHE = requests.slice(0, MAXCACHE);
+  }
+});
 
 //
 // CRON FUNCTION
 //
 new cron.CronJob('0 */' + REFRESHMIN + ' * * * *', function(){
-  getRequests(LASTUPDATED, { emit: false });
+  getRequests(LASTUPDATED, function (err, requests) {
+    if (err) {
+      console.log("Error retrieving requests: %s", err);
+      return;
+    }
+    LASTUPDATED = new Date();
+    emitRequests(requests);
+  });
 }, null, // no function to call when finished
   true // Start the job right now
 );
 
-function getRequests(lastUpdated, options) {
+function getRequests(lastUpdated, callback) {
   chicago.serviceRequests({
     "updated_after": lastUpdated.toISOString(),
     "extensions": "true"
   }, function(err, data) {
-    if (err) { console.log('Error retrieving requests:', err); return; }
-      
+    if (err) { 
+      callback(err, null); 
+      return; 
+    }
     console.log("Retrieved %d service requests at %s", data.length, LASTUPDATED.toISOString());
-      
-    if (data.length === 0) { return; }
-
+    
+    // Process our requests
     var requests = __.chain(data)       // Underscore chaining!
       .reject(function(request) {       // Remove any requests that don't have service_request_id's
         if (typeof request['service_request_id'] === 'undefined') {
@@ -77,13 +96,9 @@ function getRequests(lastUpdated, options) {
       })
       .sortBy('updated_datetime')       // Sort by updated_datetime
       .value();                         // and complete the chain
-      
-    // Add/emit requests
-    addRequests(requests, options);
-  });
     
-  // Update when we last updated
-  lastUpdated = new Date();
+    callback(null, requests);
+  });
 }
 
 
@@ -91,20 +106,9 @@ function getRequests(lastUpdated, options) {
  * Take a collection of requests and emit them over a period of time
  *
  */
-function addRequests(requests, options) {
+function emitRequests(requests) {
   var i, expectedEmit;
-  
-  options = __.defaults(options, {
-    emit: true
-  });
-  
-  if (options.emit === 'false') {
-    for (i = 0; i < requests.length; i++) {
-      cacheRequest(requests[i]);
-    }
-    return; // don't emit anything
-  }
-  
+    
   async.forEachSeries(requests, function(request, done) {
     expectedEmit = new Date(request['updated_datetime'].getTime() + (REFRESHMIN * 60000));
     
@@ -113,6 +117,8 @@ function addRequests(requests, options) {
       // if so, set it to our minimum delay
       expectedEmit = new Date(prevEmit.getTime() + EMITDELAY)
     }
+    
+    console.log('Expect to emit SR #%s at %s', request['service_request_id'], expectedEmit)
     
     // save the emit time for our next loop
     prevEmit = expectedEmit;
@@ -129,6 +135,10 @@ function addRequests(requests, options) {
   });
 }
 
+function comparator(request) {
+  return -(new Date(request['updated_datetime']).getTime());
+}
+
 function cacheRequest(request) {
   var insertion; 
   
@@ -142,16 +152,22 @@ function cacheRequest(request) {
   });
 
   // Insert the request in order (so will probably end up at the end)
-  insertion = __.sortedIndex(REQUESTSCACHE, request, function(request) { return request['updated_datetime'] });
+  insertion = __.sortedIndex(REQUESTSCACHE, request, comparator);
   REQUESTSCACHE.splice(insertion, 0, request);
+  console.log('Cached request #%s', request['service_request_id']);
   
   // ensure that we don't cache too many requests
   if (REQUESTSCACHE.length >= MAXCACHE ) {
-    // if so, pop one off the top
-    REQUESTSCACHE.shift();
+    // find the index of the 
+    removal = __.sortedIndex(REQUESTSCACHE, { 'updated_datetime': new Date(new Date().getTime() - 30*6000)}, comparator )
+    if (removal > MAXCACHE) {
+      REQUESTSCACHE = REQUESTSCACHE.splice(0, removal);
+    }
+    else {
+      REQUESTSCACHE = REQUESTSCACHE.splice(0, MAXCACHE);
+    }
+    console.log('Pruned cache; now size of %d', REQUESTSCACHE.length);
   }
-  console.log('Cached request #%s', request['service_request_id']);
-  console.log('Cache is now size of %d', REQUESTSCACHE.length);
 }
 
 // assuming io is the Socket.IO server object
@@ -160,8 +176,8 @@ io.configure(function () {
   io.set("polling duration", 10); 
 });
 
-io.sockets.on('connection', function (socket) {
-  socket.emit('existing-requests', REQUESTSCACHE); // send all of our requests on the first connection
+app.get('/api/requests', function(req, res) {
+  res.json(REQUESTSCACHE);
 });
 
 app.listen(PORT, function(){

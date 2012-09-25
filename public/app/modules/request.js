@@ -18,7 +18,9 @@ function(app, Backbone, _) {
   //
   Request.Model = Backbone.Model.extend({
        
-    idAttribute: "service_request_id"
+    idAttribute: "service_request_id",
+    
+    lastAction: false
         
   });
 
@@ -26,6 +28,7 @@ function(app, Backbone, _) {
   // COLLECTION
   //
   Request.Collection = Backbone.Collection.extend({
+    url: "api/requests",
 
     model: Request.Model,
     
@@ -33,53 +36,65 @@ function(app, Backbone, _) {
       return -(new Date(a.get('updated_datetime')).getTime());
     },
     
-    maxSize: 5,
+    maxSize: 25,
     
     checkSize: function() {
       if (this.models.length > this.maxSize) {
-        console.log('TOO BIG!');
-        this.models = this.models.slice(0, this.maxSize);
+        var outdatedRequests = [];
+        console.log('TOO BIG! There are %d models in our collection', this.models.length);
+        // remove everything older than 1 hour
+        var outdatedRequests = _.filter(this.models, function(request, index) {
+          // prune if there are more than maxSize requests 
+          // AND the request is older than 30 minutes
+          if ( (index > this.maxSize) ///&&
+               // (new Date(request.get('updated_datetime')).getTime() < (new Date().getTime() - 30*60*1000) )
+          ) {
+            return true;
+          }
+          return false;
+        }, this);
+        
+        if (outdatedRequests.length) {
+          console.log("Pruned %d outdated requests", outdatedRequests.length);
+          this.remove(outdatedRequests);
+        }
       }
     },
     
+    newRequest: function(request) {
+      var lastSummary;
+        
+      // check if there is an existing request; if so remove it
+      var existingRequest = this.get(request['service_request_id']);
+      if (existingRequest) {
+        this.remove(existingRequest);
+        console.log('Updated Service Request #%s', request['service_request_id']);
+      }
+      else {
+        console.log('Added Service Request #%s', request['service_request_id']);
+      }
+        
+      lastSummary= request['notes'][request['notes'].length - 1].summary;
+        
+      if (lastSummary.toLowerCase() === 'request opened') {
+        request.lastAction = 'opened';
+      }
+      else {
+        request.lastAction = 'updated';
+      }
+      this.add(request);
+    },
+    
     initialize: function(models, options) {
-      var self = this;
       this.socket = options.socket;
       
-      // this.on('add', this.checkSize, this);
+      this.fetch();
+      this.on('add', this.checkSize, this);
       // this.on('reset', this.checkSize, this);      
       
-      this.socket.on('existing-requests', function (data) {
-        console.log('Loaded %d Service Requests', data.length);
-        
-        self.add(data, {silent: true});
-        self.trigger('reset');
-      });
-      
-      this.socket.on('new-request', function (data) {
-        var request = data;
-        // check if there is an existing request; if so remove it
-        var existingRequest = self.get(request['service_request_id']);
-        if (existingRequest) {
-          self.remove(existingRequest);
-          console.log('Updated Service Request #%s', request['service_request_id']);
-        }
-        else {
-          console.log('Added Service Request #%s', request['service_request_id']);
-        }
-        
-        var lastSummary = request['notes'][request['notes'].length - 1].summary;
-        
-        if (lastSummary.toLowerCase() === 'request opened') {
-          request.sound = 'open';
-        }
-        else {
-          request.sound = 'update';
-        }
-        self.add(request);
-      });
+      this.newRequest = _.bind(this.newRequest, this);
+      this.socket.on('new-request', this.newRequest);
     }
-    
   });
   
   //
@@ -96,15 +111,14 @@ function(app, Backbone, _) {
     
     afterRender: function() {
       this.$el.find('abbr.timeago').timeago();
-      
-      if (this.model.get('sound')) {
+            
+      if (this.model.get('lastAction')) {
         this.$el.effect("highlight", {color: "#FBC321"}, 1500);
-        console.log('silent');
       }
     },
 
     initialize: function() {
-      // nothing
+      this.model.on('remove', this.remove, this);
     }
     
   });
@@ -132,7 +146,7 @@ function(app, Backbone, _) {
       if (self.$el.css('right')) {
         oldPosx = self.$el.css('right').match(/(-?[0-9]*)px/)[1];
       }
-      if (self.model.get('sound') === 'update') {
+      if (self.model.get('lastAction') === 'updated') {
         SPEED = 3;
       }
       
@@ -149,7 +163,7 @@ function(app, Backbone, _) {
     initialize: function(options) {
       this.parent = options.parent;
       var self = this;
-      this.className =  'best ' + this.model.get('sound');
+      this.className =  'beast ' + this.model.get('lastAction');
       this.parent.on('loop', this.move, this);       
     }
   });
@@ -177,16 +191,10 @@ function(app, Backbone, _) {
     },
     
     addRequest: function(model, collection, options) {
-      // if no sound, just add it to the table (for pre-existing models)
-      // if( model.get('sound') === false || typeof model.get('sound') === 'undefined') {
-      //   return;
-      // }
-      
-      // otherwise, we'll add a beast
+      // Add a beast
       this.addBeast(model);
       
-      // and add it to the table; TODO: make it flash
-      // add it to our Table too
+      // and add it to the table
       this.insertView("tbody", new Request.Views.Row({
         model: model,
         // in reverse order
@@ -204,12 +212,12 @@ function(app, Backbone, _) {
       if (timeout < 0) {
         timeout = 0;
       }      
-      // add it to our row
+      // add it to the scene
       setTimeout(function() {        
         self.insertView("#scene", new Request.Views.Beast({
           model: model,
           parent: self,
-          className: 'beast ' + model.get('sound')
+          className: 'beast ' + model.get('lastAction')
         })).render();
       }, timeout);
     },
