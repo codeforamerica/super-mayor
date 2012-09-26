@@ -128,7 +128,11 @@ audio,
 
 #scene .beast.updated {
   bottom: 176px;
-  background-image: url(../img/box.gif);
+  background: transparent url(../img/boxes.png) no-repeat -48px 0;
+}
+
+#scene .beast.updated.active {
+  background-position: 0 0;
 }
 
 #logo {
