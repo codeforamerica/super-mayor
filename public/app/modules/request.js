@@ -139,17 +139,17 @@ function(app, Backbone, _) {
     posX: -36,
     
     move: function() {
-      var SPEED = 4;
+      var SPEED = 3;
       
       if (this.model.get('lastAction') === 'updated') {
-        SPEED = 3;
+        SPEED = 2;
       }
       
       this.posX = this.posX + SPEED;
       this.$el.css('right', this.posX + 'px' );
       
       // remove the element if it goes beyond the width of the scene
-      if (this.posX > this.width) {
+      if (this.posX > this.parent.width) {
         this.remove();
       } 
     },
@@ -186,7 +186,6 @@ function(app, Backbone, _) {
     
     afterRender: function() {
       this.$mayor = this.$el.find('#mayor');
-      
       
       this.resize();
       // startup our loop after the render
@@ -236,7 +235,7 @@ function(app, Backbone, _) {
     
     moveForeground: function() {
       // scroll the foreground
-      var SPEED = -2;
+      var SPEED = -0.5;
       var WIDTH = 960;
       this.foregroundX = (this.foregroundX + SPEED) % WIDTH;
       this.$el.find('#foreground').css('background-position', this.foregroundX + 'px 100%' );
@@ -244,7 +243,7 @@ function(app, Backbone, _) {
     
     moveBackground: function() {
       // scroll the background
-      var SPEED = -1;
+      var SPEED = -.25;
       var WIDTH = 315;
       this.backgroundX = (this.backgroundX + SPEED) % WIDTH;
       this.$el.find('#background').css('background-position', this.backgroundX + 'px 100%' );
@@ -295,9 +294,10 @@ function(app, Backbone, _) {
           if ( !$beast.hasClass('underneath') ) {
             // first time the mayor encounters this beast
             $beast.addClass('underneath');
+            $beast.addClass('active');
             
             // check if it's a coin block
-            if ($beast.hasClass('update')) {
+            if ($beast.hasClass('updated')) {
               this.$mayor.find('audio.coin')[0].play();
             }
           }
