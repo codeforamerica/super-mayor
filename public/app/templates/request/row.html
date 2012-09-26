@@ -1,3 +1,8 @@
+<%
+  var match = request['address'].match(/(.*), CHICAGO, IL, \d*/);
+  var address = match ? match[1] : request['address'];
+%>
+
 <td class="srnum">
     <a href="http://servicetracker.cityofchicago.org/requests/<%= request['service_request_id'] %>">
       #<span class="hidden-phone"><%= request['service_request_id'] %></span>
@@ -5,5 +10,5 @@
   </td>
   <td class="hidden-phone"><abbr class="timeago" title="<%= request['updated_datetime'] %>"><%= request['updated_datetime'] %></td>
   <td><%= request['service_name'] %></td>
-  <td>Ward <%= request['extended_attributes'].ward %><span class="hidden-phone">: <%= request['address'].match(/(.*), CHICAGO, IL, \d*/)[1] %></span></td>
+  <td>Ward <%= request['extended_attributes'].ward %><span class="hidden-phone">: <%= address %></span></td>
   <td><%= request['notes'][request['notes'].length - 1].summary %></td>
