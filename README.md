@@ -10,7 +10,7 @@ Features:
 - Background changes depending on day/night
  
 
-![Screenshot of Super Mayor](https://raw.github.com/bensheldon/super-mayor/master/screenshot.png)
+![Screenshot of Super Mayor](https://raw.github.com/codeforamerica/super-mayor/master/screenshot.png)
 
 _Skyline graphic by [TJ McKimmey](http://tjmckimmey.com/), logo by [Angel Kittiyachavalit](http://iamakit.com/)._
 
