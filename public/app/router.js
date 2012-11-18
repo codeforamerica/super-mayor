@@ -37,7 +37,6 @@ function(app, _, io, Request) {
     },
 
     initialize: function() {
-      var self = this;
       app.useLayout("main");
             
       var socket = io.connect('/');
