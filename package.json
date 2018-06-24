@@ -6,7 +6,8 @@
     "node": "0.6.x"
   },
   "scripts": {
-    "install": "bbb release --config public/grunt.js --force"
+    "install": "bbb release --config public/grunt.js --force",
+    "start": "node server.js"
   },
   "dependencies": {
     "lodash": "0.7.x",
