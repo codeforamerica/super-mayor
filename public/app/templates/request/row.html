@@ -11,4 +11,4 @@
   <td class="hidden-phone"><abbr class="timeago" title="<%= request['updated_datetime'] %>"><%= request['updated_datetime'] %></td>
   <td><%= request['service_name'] %></td>
   <td>Ward <%= request['extended_attributes'].ward %><span class="hidden-phone">: <%= address %></span></td>
-  <td><%= request['notes'][request['notes'].length - 1].summary %></td>
+  <td><%= request['notes'][request['notes'].length - 1].description %></td>

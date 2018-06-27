@@ -61,7 +61,7 @@ function(app, Backbone, _) {
     },
     
     newRequest: function(request) {
-      var lastSummary;
+      var lastType;
         
       // check if there is an existing request; if so remove it
       var existingRequest = this.get(request['service_request_id']);
@@ -73,9 +73,9 @@ function(app, Backbone, _) {
         console.log('Added Service Request #%s', request['service_request_id']);
       }
         
-      lastSummary= request['notes'][request['notes'].length - 1].summary;
         
-      if (lastSummary.toLowerCase() === 'request opened') {
+      lastType = request['notes'][request['notes'].length - 1].type;
+      if (lastType.toLowerCase() === 'opened') {
         request.lastAction = 'opened';
       }
       else {
