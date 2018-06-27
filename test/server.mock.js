@@ -21,7 +21,7 @@ var createRequest = function (updatedDatetime, updated) {
     notes: [
       {
         datetime: "2012-09-19T09:46:42-05:00",
-        summary: "Request opened",
+        description: "Opened",
         type: "opened"
       }
     ],
@@ -35,8 +35,8 @@ var createRequest = function (updatedDatetime, updated) {
   if (updated === 0) {
     request.notes.push({
       datetime: "2012-09-19T09:46:42-05:00",
-      summary: "Request updated",
-      type: "updated"
+      description: "Request updated",
+      type: "activity"
     });
   }
   
