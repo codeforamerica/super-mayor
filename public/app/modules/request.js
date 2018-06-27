@@ -75,7 +75,7 @@ function(app, Backbone, _) {
         
         
       lastType = request['notes'][request['notes'].length - 1].type;
-      if (lastType.toLowerCase() === 'opened') {
+      if (lastType && lastType.toLowerCase() === 'opened') {
         request.lastAction = 'opened';
       }
       else {
