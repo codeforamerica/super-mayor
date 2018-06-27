@@ -1,0 +1,11 @@
+# osx noise
+.DS_Store
+profile
+
+# node
+env
+.env
+node_modules
+
+# grunt-bbb
+public/dist
